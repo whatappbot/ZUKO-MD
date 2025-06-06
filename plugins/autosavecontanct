@@ -1,0 +1,29 @@
+module.exports = {
+  name: 'autosavecontact',
+  description: 'Automatically saves new contacts who message the bot',
+  event: ['messages.upsert'],
+  async onEvent(conn, m, store, settings) {
+    try {
+      // Only act on new messages, ignore status, group messages, and own messages
+      if (!m.message || m.key.fromMe || m.key.remoteJid.endsWith('@g.us')) return;
+
+      const sender = m.key.participant || m.key.remoteJid;
+      if (!store.contacts[sender]) {
+        // Save the new contact
+        store.contacts[sender] = {
+          notify: m.pushName || 'Unknown',
+          vname: m.pushName || 'Unknown',
+          jid: sender,
+        };
+
+        // Optional: reply or log
+        await conn.sendMessage(sender, { text: 'Contact saved automatically!' });
+        console.log(`Auto-saved new contact: ${sender}`);
+      }
+    } catch (err) {
+      console.error('[AUTO SAVE CONTACT ERROR]', err);
+    }
+  }
+};
+
+////coded by zuko👹
